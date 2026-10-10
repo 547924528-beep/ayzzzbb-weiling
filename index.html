@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#141d29">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="装备制造部">
+<title>现代装备制造部工作台</title>
+<!-- 本工作台为单文件 HTML，全部 CSS/JS/SVG 内联；数据存 localStorage，可部署为在线链接。 -->
+<style>
+:root{
+  --ink:#141d29; --ink-2:#1d2937; --ink-3:#26344a;
+  --paper:#f4f5f8; --card:#ffffff; --line:#e7eaf0; --line-2:#d7dce6;
+  --text:#1d2632; --muted:#76839a; --muted-2:#9aa6ba;
+  --gold:#b07d2b; --gold-2:#caa15a; --steel:#2f6f8f; --steel-2:#3f8fb0;
+  --ok:#2e7d57; --warn:#c08a1e; --danger:#b5392b; --danger-2:#d6553f;
+  --shadow:0 1px 2px rgba(20,29,41,.05),0 8px 24px rgba(20,29,41,.06);
+  --r:14px; --sidebar-w:248px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:var(--font);background:var(--paper);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:16px;color:var(--text)}
+a{color:var(--steel);text-decoration:none}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cbd2de;border-radius:10px;border:2px solid var(--paper)}
+::-webkit-scrollbar-track{background:transparent}
+
+.auth-mask{position:fixed;inset:0;z-index:200;background:radial-gradient(120% 120% at 80% -10%,#1f2c3d 0%,#0f1620 60%);display:flex;align-items:center;justify-content:center;padding:24px}
+.auth-mask.hidden{display:none}
+.auth-card{width:100%;max-width:380px;background:#fff;border-radius:18px;padding:34px 30px;box-shadow:0 30px 80px rgba(0,0,0,.4);position:relative;overflow:hidden}
+.auth-card::before{content:"";position:absolute;top:-60px;right:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(176,125,43,.18),transparent 70%)}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.auth-logo svg{width:38px;height:38px;flex:none}
+.auth-logo b{font-size:19px;letter-spacing:.5px}
+.auth-sub{color:var(--muted);font-size:13px;margin:2px 0 22px}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;letter-spacing:.3px}
+.auth-field input{width:100%;padding:13px 14px;border:1px solid var(--line-2);border-radius:11px;background:#fbfcfe;font-size:16px;transition:.15s}
+.auth-field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,125,43,.12)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:11px;font-size:14.5px;font-weight:600;transition:.15s;min-height:44px}
+.btn-primary{background:linear-gradient(135deg,var(--ink-2),var(--ink));color:#fff;width:100%}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#1c1305}
+.btn-gold:hover{filter:brightness(1.05)}
+.btn-ghost{border:1px solid var(--line-2);background:#fff;color:var(--text)}
+.btn-ghost:hover{background:#f6f8fb}
+.btn-sm{padding:8px 13px;font-size:13px;min-height:38px;border-radius:9px}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{filter:brightness(1.08)}
+.auth-hint{font-size:12.5px;color:var(--muted);margin-top:16px;text-align:center;line-height:1.6}
+.auth-err{color:var(--danger);font-size:13px;margin-top:10px;min-height:18px;text-align:center}
+
+.app{display:flex;min-height:100vh}
+.app.hidden{display:none}
+.sidebar{width:var(--sidebar-w);flex:none;background:linear-gradient(180deg,var(--ink),var(--ink-2));color:#dfe6f0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:20px 14px}
+.brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand svg{width:34px;height:34px;flex:none}
+.brand b{font-size:15.5px;color:#fff;letter-spacing:.4px;line-height:1.25}
+.brand span{font-size:11px;color:var(--gold-2);letter-spacing:2px;display:block;margin-top:1px}
+.nav{flex:1;overflow-y:auto;margin-top:8px;display:flex;flex-direction:column;gap:3px;padding-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;color:#aeb9cc;font-size:14px;transition:.13s;text-align:left;width:100%}
+.nav-item svg{width:19px;height:19px;flex:none;opacity:.85}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-item.active{background:linear-gradient(90deg,rgba(176,125,43,.22),rgba(176,125,43,.04));color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+.side-foot{padding:10px 8px 4px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#8b97ab}
+.side-user{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.side-user .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#1c1305;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.side-user .nm{font-size:13px;color:#e7edf6;font-weight:600}
+.side-user .rl{font-size:11px;color:var(--gold-2)}
+.link-like{color:#8b97ab;font-size:12px;cursor:pointer;padding:5px 0;display:block}
+.link-like:hover{color:#fff}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{height:60px;flex:none;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:30}
+.topbar h1{font-size:17px;margin:0;letter-spacing:.3px;font-weight:700}
+.topbar .crumb{font-size:12.5px;color:var(--muted);margin-top:2px}
+.top-right{display:flex;align-items:center;gap:14px}
+.status-pill{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);padding:6px 11px;border-radius:20px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(46,125,87,.15)}
+.status-dot.busy{background:var(--warn);box-shadow:0 0 0 3px rgba(192,138,30,.15)}
+.status-dot.err{background:var(--danger);box-shadow:0 0 0 3px rgba(181,57,43,.15)}
+.icon-btn{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);border:1px solid var(--line)}
+.icon-btn:hover{background:#f1f4f9;color:var(--text)}
+.icon-btn svg{width:19px;height:19px}
+.content{padding:26px;max-width:1280px;width:100%;margin:0 auto;padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+
+.hero{position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(135deg,var(--ink),var(--ink-3));color:#eaf0f7;padding:26px 28px;margin-bottom:22px;border:1px solid rgba(255,255,255,.06)}
+.hero svg.bg{position:absolute;right:-30px;top:-30px;width:240px;height:240px;opacity:.13;pointer-events:none}
+.hero .eyebrow{font-size:11.5px;letter-spacing:3px;color:var(--gold-2);text-transform:uppercase}
+.hero h2{font-size:25px;margin:8px 0 6px;letter-spacing:1px;font-weight:800}
+.hero p{margin:0;color:#b6c2d4;font-size:13.5px;max-width:620px}
+.hero .seal{position:absolute;right:26px;bottom:22px;width:74px;height:74px;border:2px solid rgba(202,161,90,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--gold-2);letter-spacing:1px;line-height:1.3;transform:rotate(-8deg)}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
+.stat::after{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:linear-gradient(var(--gold),var(--gold-2))}
+.stat .k{font-size:12.5px;color:var(--muted);letter-spacing:.3px}
+.stat .v{font-size:27px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.stat .v small{font-size:13px;color:var(--muted);font-weight:600;margin-left:3px}
+.stat .sub{font-size:12px;color:var(--muted-2);margin-top:3px}
+
+.dash-2{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;margin-bottom:20px}
+.dash-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:20px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow)}
+.panel h3{margin:0 0 4px;font-size:15.5px;letter-spacing:.3px}
+.panel .ph{font-size:12px;color:var(--muted);margin-bottom:14px}
+.chart-row{display:flex;align-items:center;gap:18px}
+.chart-legend{flex:1;display:flex;flex-direction:column;gap:8px}
+.lg{display:flex;align-items:center;gap:9px;font-size:13px}
+.lg i{width:11px;height:11px;border-radius:3px;flex:none}
+.lg b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--text)}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;font-size:13px}
+.bar-row .bl{width:118px;flex:none;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:20px;background:#eef1f6;border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--steel),var(--steel-2));display:flex;align-items:center;justify-content:flex-end;padding-right:7px;color:#fff;font-size:11px;font-weight:700;min-width:24px}
+
+.alert-strip{background:linear-gradient(135deg,#fff8ec,#fdf2e0);border:1px solid #f0dcb8;border-radius:var(--r);padding:14px 18px;margin-bottom:22px;display:flex;gap:14px;align-items:flex-start}
+.alert-strip svg{width:22px;height:22px;flex:none;color:var(--warn);margin-top:1px}
+.alert-strip .at{font-size:13.5px;line-height:1.6}
+.alert-strip b{color:var(--danger)}
+
+.tlist{display:flex;flex-direction:column;gap:9px}
+.titem{display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fbfcfe;font-size:13.5px}
+.titem .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.titem .meta{color:var(--muted);font-size:12px;margin-left:auto}
+.titem.over .tt{color:var(--danger);font-weight:600}
+
+.mini-table{width:100%;border-collapse:collapse;font-size:13px}
+.mini-table th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.mini-table td{padding:9px 10px;border-bottom:1px solid #f1f3f7;vertical-align:top}
+.mini-table tr:last-child td{border-bottom:none}
+
+.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:600}
+.tag-male{background:#e8f1f8;color:var(--steel)}
+.tag-female{background:#fbe9ef;color:#c0397a}
+.tag-warn{background:#fdf0d9;color:var(--warn)}
+.tag-ok{background:#e6f3ec;color:var(--ok)}
+.tag-bad{background:#fbe7e3;color:var(--danger)}
+.empty{text-align:center;color:var(--muted-2);padding:26px;font-size:13px}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.search{flex:1;min-width:200px;position:relative}
+.search input{width:100%;padding:10px 14px 10px 38px;border:1px solid var(--line-2);border-radius:11px;background:#fff}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--muted-2)}
+.search input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,125,43,.1)}
+.table-wrap{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+table.grid{width:100%;border-collapse:collapse;font-size:13.5px}
+table.grid th{background:#fafbfd;position:sticky;top:0;text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;padding:12px 13px;border-bottom:1px solid var(--line);white-space:nowrap;z-index:1}
+table.grid td{padding:11px 13px;border-bottom:1px solid #f2f4f8;vertical-align:top}
+table.grid tr:hover td{background:#fafbfe}
+table.grid tr.sel td{background:#fff7e9}
+table.grid .col-act{width:96px;text-align:right;white-space:nowrap}
+.ck{width:17px;height:17px;accent-color:var(--gold);cursor:pointer}
+.cell-img{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid var(--line);cursor:pointer}
+.cell-note{color:var(--muted);font-size:12px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-act button{font-size:12.5px;color:var(--steel);padding:4px 8px;border-radius:7px}
+.row-act button:hover{background:#eef4f8}
+.row-act button.del{color:var(--danger)}
+.batch-bar{display:none;align-items:center;gap:10px;background:#fff8ec;border:1px solid #f0dcb8;padding:10px 14px;border-radius:11px;margin-bottom:14px;font-size:13px}
+.batch-bar.show{display:flex}
+.batch-bar b{color:var(--gold)}
+.muted{color:var(--muted)}
+.center{text-align:center}
+
+.modal-mask{position:fixed;inset:0;z-index:120;background:rgba(16,22,32,.5);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding:40px 18px;overflow-y:auto}
+.modal-mask.show{display:flex}
+.modal{width:100%;max-width:560px;background:#fff;border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.35);animation:pop .18s ease}
+@keyframes pop{from{transform:translateY(12px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+.modal-head h3{margin:0;font-size:17px}
+.modal-body{padding:20px 22px;max-height:62vh;overflow-y:auto}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px 16px}
+.form-grid .full{grid-column:1/-1}
+.fld label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.fld input,.fld select,.fld textarea{width:100%;padding:11px 13px;border:1px solid var(--line-2);border-radius:10px;background:#fbfcfe;font-size:16px}
+.fld textarea{resize:vertical;min-height:74px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,125,43,.1)}
+.chk-group{display:flex;flex-wrap:wrap;gap:8px}
+.chk-pill{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line-2);border-radius:20px;font-size:13px;cursor:pointer;background:#fbfcfe;user-select:none}
+.chk-pill input{width:15px;height:15px;accent-color:var(--gold)}
+.chk-pill.on{border-color:var(--gold);background:#fff7e9;color:#7a5410}
+.img-drop{border:1.5px dashed var(--line-2);border-radius:11px;padding:14px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;transition:.15s}
+.img-drop:hover{border-color:var(--gold);color:var(--gold);background:#fffaf0}
+.img-prev{margin-top:10px;display:none;align-items:center;gap:10px}
+.img-prev.show{display:flex}
+.img-prev img{width:64px;height:64px;object-fit:cover;border:1px solid var(--line);border-radius:8px}
+.img-prev .rm{font-size:12px;color:var(--danger);cursor:pointer}
+.close-x{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.close-x:hover{background:#f1f4f9}
+.close-x svg{width:18px;height:18px}
+
+.user-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;margin-bottom:10px;background:#fbfcfe}
+.user-row .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--steel),var(--steel-2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.user-row .info{flex:1;min-width:0}
+.user-row .info b{font-size:14px}
+.user-row .info span{font-size:12px;color:var(--muted)}
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:8px}
+
+.banner{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:13px 20px;border-radius:13px;box-shadow:0 12px 40px rgba(0,0,0,.25);display:flex;align-items:center;gap:14px;z-index:150;font-size:13.5px;max-width:92vw}
+.banner svg{width:20px;height:20px;color:var(--gold-2);flex:none}
+.banner .btn{background:var(--gold);color:#1c1305;padding:8px 14px;min-height:36px;font-size:13px}
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:11px;font-size:13.5px;z-index:160;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--danger)}
+.toast.ok{background:var(--ok)}
+
+.bottom-tab{display:none}
+@media(max-width:860px){
+  .sidebar{display:none}
+  .dash-2{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .content{padding:16px}
+  .topbar{padding:0 16px}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .bottom-tab{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:60;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
+  .bt-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;color:var(--muted);font-size:10.5px;border-radius:10px;min-width:54px}
+  .bt-item svg{width:21px;height:21px}
+  .bt-item.active{color:var(--gold)}
+  .content{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+  .topbar h1{font-size:15px}
+  table.grid{font-size:12.5px}
+  table.grid th,table.grid td{padding:9px 9px}
+  .cell-note{max-width:130px}
+}
+@media(max-width:480px){ .stat .v{font-size:22px} }
+</style>
+</head>
+<body>
+
+<div class="auth-mask" id="authMask">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="#b07d2b" stroke-width="2.5"/><path d="M24 8l3 5 5-2 1 5 5 2-3 5 3 5-5 2-1 5-5-2-3 5-3-5-5 2-1-5-5-2 3-5-3-5 5-2 1-5 5 2z" fill="#caa15a" opacity=".85"/><circle cx="24" cy="24" r="6" fill="#141d29"/></svg>
+      <div><b>现代装备制造部</b></div>
+    </div>
+    <div class="auth-sub" id="authSub">部门集成工作台 · 请登录</div>
+    <div id="authForm">
+      <div class="auth-field" id="nameField">
+        <label>用户名</label>
+        <input id="authName" placeholder="输入用户名" autocomplete="username">
+      </div>
+      <div class="auth-field">
+        <label>密码</label>
+        <input id="authPwd" type="password" placeholder="输入密码" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" id="authBtn">登 录</button>
+      <div class="auth-err" id="authErr"></div>
+      <div class="auth-hint" id="authHint"></div>
+    </div>
+  </div>
+</div>
+
+<div class="app hidden" id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="#caa15a" stroke-width="2.5"/><path d="M24 8l3 5 5-2 1 5 5 2-3 5 3 5-5 2-1 5-5-2-3 5-3-5-5 2-1-5-5-2 3-5-3-5 5-2 1-5 5 2z" fill="#caa15a" opacity=".85"/><circle cx="24" cy="24" r="6" fill="#141d29"/></svg>
+      <div><b>装备制造部</b><span>DEPT SPACE</span></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <div class="side-user">
+        <div class="av" id="sideAv">部</div>
+        <div><div class="nm" id="sideNm">部长</div><div class="rl" id="sideRl">超级管理员</div></div>
+      </div>
+      <span class="link-like" id="openUsers">· 用户与权限</span>
+      <span class="link-like" id="openBackup">· 数据备份 / 恢复</span>
+      <span class="link-like" id="logoutBtn">· 退出登录</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">部门概况</h1>
+        <div class="crumb" id="pageCrumb">实时聚合 · 数据存于本机</div>
+      </div>
+      <div class="top-right">
+        <div class="status-pill" id="statusPill"><span class="status-dot" id="statusDot"></span><span id="statusText">已保存</span></div>
+        <button class="icon-btn" id="mobileMenuBtn" title="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+
+  <nav class="bottom-tab" id="bottomTab"></nav>
+</div>
+
+<div class="modal-mask" id="modalMask"><div class="modal" id="modalBox"></div></div>
+<div class="toast" id="toast"></div>
+<div class="banner hidden" id="banner"></div>
+
+<script>
+"use strict";
+/* ===== 现代装备制造部工作台 · 单文件 / 内联 / localStorage ===== */
+/* 架构：存储层 → 计算层 → 渲染层（单向调用，无环路） */
+
+/* ---------- 存储层（带损坏/失败处理） ---------- */
+const PREFIX = "wb_mz_";
+function raw(k){ return PREFIX + k; }
+let _corrupt = {};
+function lsGet(k, def){
+  try{
+    const r = localStorage.getItem(raw(k));
+    if(r === null || r === undefined) return def;
+    return JSON.parse(r);
+  }catch(e){
+    flagCorrupt(k);
+    return def;
+  }
+}
+function lsSet(k, val){
+  try{
+    localStorage.setItem(raw(k), JSON.stringify(val));
+    setStatus("ok");
+    return true;
+  }catch(e){
+    if(e && (e.name === "QuotaExceededError" || e.code === 22 || e.code === 1014)){
+      setStatus("err");
+      showBanner("⚠ 本地存储空间已满，部分数据未能保存。请导出备份后清理图片或旧数据。", true);
+    }else{
+      setStatus("err");
+      showToast("保存失败：" + (e && e.message ? e.message : "未知错误"), "err");
+    }
+    return false;
+  }
+}
+function flagCorrupt(k){
+  _corrupt[k] = true;
+  if(!sessionStorage.getItem("corruptShown")){
+    sessionStorage.setItem("corruptShown","1");
+    openRecover();
+  }
+}
+
+/* 数据键 */
+const DKEY = {
+  teachers:"data_teachers", students:"data_students", classes:"data_classes",
+  majors:"data_majors", attendance:"data_attendance", internships:"data_internships",
+  violations:"data_violations", dropouts:"data_dropouts", cadres:"data_cadres"
+};
+function getData(key){ const v = lsGet(key, null); return Array.isArray(v) ? v : []; }
+function setData(key, arr){ return lsSet(key, arr); }
+
+/* ---------- 权限 / 认证 ---------- */
+function hash(s){ let h=5381; s=String(s||""); for(let i=0;i<s.length;i++){ h=((h<<5)+h + s.charCodeAt(i))>>>0; } return "h"+h.toString(36); }
+const PERMS = [
+  {k:"view",label:"查看"},{k:"add",label:"新增"},{k:"edit",label:"编辑"},
+  {k:"del",label:"删除"},{k:"imp",label:"导入"},{k:"exp",label:"导出"}
+];
+const ADMIN_ALL = PERMS.reduce((o,p)=>{ o[p.k]=true; return o; }, {manageUsers:true});
+function getUsers(){ return lsGet("users", null) || []; }
+function setUsers(u){ return lsSet("users", u); }
+function getSettings(){ return lsGet("settings", {setupDone:false, backupAt:0}); }
+function setSettings(s){ return lsSet("settings", s); }
+let currentUser = null;
+function can(perm){
+  if(!currentUser) return false;
+  if(currentUser.role === "admin") return true;
+  return !!currentUser.perms[perm];
+}
+
+/* ---------- 状态 / 提示 ---------- */
+function setStatus(type){
+  const dot=document.getElementById("statusDot"), t=document.getElementById("statusText");
+  if(!dot) return;
+  if(type==="busy"){ dot.className="status-dot busy"; t.textContent="保存中…"; return; }
+  if(type==="err"){ dot.className="status-dot err"; t.textContent="存储异常"; return; }
+  dot.className="status-dot"; t.textContent="已保存";
+}
+let _toastT=null;
+function showToast(msg, type){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.className="toast show"+(type?(" "+type):"");
+  clearTimeout(_toastT);
+  _toastT=setTimeout(()=>{ el.className="toast"+(type?(" "+type):""); }, 2200);
+}
+let _bannerT=null;
+function showBanner(html, sticky){
+  const b=document.getElementById("banner");
+  b.innerHTML = html + (sticky?'<button class="btn" onclick="hideBanner()">知道了</button>':'');
+  b.classList.remove("hidden");
+}
+function hideBanner(){ document.getElementById("banner").classList.add("hidden"); }
+
+/* ---------- 工具 ---------- */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+function fmtDate(s){ if(!s) return "—"; const d=new Date(s); if(isNaN(d)) return String(s); return (d.getMonth()+1)+"月"+d.getDate()+"日"; }
+function totalCount(){
+  let n=0; for(const k in DKEY){ n += getData(DKEY[k]).length; } return n;
+}
+function maybeBackupHint(){
+  const n=totalCount(); const s=getSettings();
+  if(n>0 && n!==s.backupAt && n%20===0){
+    setSettings(Object.assign({}, s, {backupAt:n}));
+    showBanner("数据已累计 <b>"+n+"</b> 条，建议导出 JSON 备份以防丢失。<button class='btn' onclick='openBackup();hideBanner()'>立即备份</button>", true);
+  }
+}
+
+/* =========================================================
+   模块配置（通用引擎驱动全部 CRUD）
+   ========================================================= */
+const MODULES = [
+  { id:"overview", name:"部门概况", tcrumb:"实时聚合 · 数据存于本机", type:"overview",
+    icon:"<rect x='3' y='3' width='8' height='8' rx='1.5'/><rect x='13' y='3' width='8' height='5' rx='1.5'/><rect x='13' y='10' width='8' height='11' rx='1.5'/><rect x='3' y='13' width='8' height='8' rx='1.5'/>" },
+  { id:"teachers", name:"教师管理", tcrumb:"专任教师团队与班主任", dataKey:DKEY.teachers,
+    icon:"<path d='M12 3l9 5-9 5-9-5z'/><path d='M6 11v5c0 1 3 3 6 3s6-2 6-3v-5'/>",
+    fields:[
+      {k:"name",l:"姓名",t:"text",req:true},{k:"gender",l:"性别",t:"select",o:["男","女"]},
+      {k:"role",l:"角色",t:"text"},{k:"title",l:"职称",t:"text"},
+      {k:"major",l:"任教专业",t:"text"},{k:"isHead",l:"班主任",t:"select",o:["是","否"]},
+      {k:"birthday",l:"生日",t:"date"},{k:"phone",l:"联系电话",t:"tel"},
+      {k:"note",l:"备注",t:"textarea",full:true}
+    ] },
+  { id:"students", name:"学生管理", tcrumb:"在校学生信息", dataKey:DKEY.students,
+    icon:"<path d='M12 3l9 5-9 5-9-5z'/><path d='M6 11v5c0 1 3 3 6 3s6-2 6-3v-5'/>",
+    fields:[
+      {k:"name",l:"姓名",t:"text",req:true},{k:"gender",l:"性别",t:"select",o:["男","女"]},
+      {k:"cls",l:"班级",t:"text"},{k:"major",l:"专业",t:"text"},
+      {k:"board",l:"住宿/走读",t:"select",o:["住宿","走读"]},
+      {k:"addr",l:"家庭住址",t:"text"},
+      {k:"parentPhone",l:"家长电话",t:"tel"},
+      {k:"special",l:"是否特异体质",t:"select",o:["否","是"]},
+      {k:"defect",l:"心理生理缺陷",t:"textarea",full:true}
+    ] },
+  { id:"classes", name:"班级管理", tcrumb:"班级一览与班主任", dataKey:DKEY.classes,
+    icon:"<path d='M4 21V5a2 2 0 012-2h9l5 5v13'/><path d='M4 21h16'/><path d='M8 7h8M8 11h8'/>",
+    fields:[
+      {k:"cls",l:"班级名称",t:"text",req:true},{k:"head",l:"班主任",t:"text"},
+      {k:"headPhone",l:"班主任电话",t:"tel"},{k:"count",l:"班级人数",t:"number"},
+      {k:"genderRatio",l:"男女生比",t:"text"},{k:"boardRatio",l:"住校走读生比",t:"text"},
+      {k:"room",l:"教室编号",t:"text"}
+    ] },
+  { id:"majors", name:"专业管理", tcrumb:"三大专业布点", dataKey:DKEY.majors,
+    icon:"<path d='M12 2v20M2 12h20M5 5l14 14M19 5L5 19'/>",
+    fields:[
+      {k:"major",l:"专业名称",t:"text",req:true},
+      {k:"classCount",l:"班级数",t:"number"},
+      {k:"stuCount",l:"学生数",t:"number"},
+      {k:"teacherCount",l:"专任教师数",t:"number"}
+    ] },
+  { id:"attendance", name:"教师考勤", tcrumb:"当日状态可随时编辑", dataKey:DKEY.attendance,
+    icon:"<path d='M9 11l3 3 8-8'/><path d='M3 7l3-3h12l3 3'/><path d='M3 7v13h18V7'/>",
+    fields:[
+      {k:"teacher",l:"教师",t:"text",req:true},{k:"role",l:"角色",t:"text"},
+      {k:"status",l:"当日状态",t:"multiselect",o:["出勤","请假","迟到","旷工","出差","培训"]},
+      {k:"note",l:"备注（可传图）",t:"image",full:true}
+    ] },
+  { id:"internships", name:"实习见习", tcrumb:"学生外出实习见习", dataKey:DKEY.internships,
+    icon:"<path d='M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z'/><circle cx='12' cy='10' r='2.5'/>",
+    fields:[
+      {k:"outDate",l:"外出时间",t:"date"},
+      {k:"place",l:"实习见习地点",t:"text",req:true},
+      {k:"leader",l:"带队教师",t:"text"},
+      {k:"note",l:"备注",t:"textarea",full:true}
+    ] },
+  { id:"violations", name:"重大违纪", tcrumb:"重大违纪学生", dataKey:DKEY.violations,
+    icon:"<path d='M12 9v4M12 17h.01'/><path d='M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z'/>",
+    fields:[
+      {k:"name",l:"姓名",t:"text",req:true},{k:"cls",l:"班级",t:"text"},
+      {k:"detail",l:"违纪情况",t:"textarea",full:true},
+      {k:"note",l:"备注（可传图）",t:"image",full:true}
+    ] },
+  { id:"dropouts", name:"退学明细", tcrumb:"退学学生明细", dataKey:DKEY.dropouts,
+    icon:"<path d='M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M19 8v6M22 11h-6'/>",
+    fields:[
+      {k:"name",l:"姓名",t:"text",req:true},{k:"cls",l:"班级",t:"text"},
+      {k:"detail",l:"退学情况",t:"textarea",full:true},
+      {k:"note",l:"备注（可传图）",t:"image",full:true}
+    ] },
+  { id:"cadres", name:"学生会干部", tcrumb:"学生干部队伍", dataKey:DKEY.cadres,
+    icon:"<path d='M16 21v-2a4 4 0 00-8 0v2'/><circle cx='12' cy='11' r='4'/>",
+    fields:[
+      {k:"name",l:"姓名",t:"text",req:true},{k:"cls",l:"班级",t:"text"},
+      {k:"position",l:"职位",t:"text"},{k:"phone",l:"电话",t:"tel"},
+      {k:"note",l:"备注（可传图）",t:"image",full:true}
+    ] }
+];
+const MOD_BY_ID = MODULES.reduce((o,m)=>{ o[m.id]=m; return o; }, {});
+
+/* =========================================================
+   通用数据表引擎
+   ========================================================= */
+let _selected = {};
+function selSet(id){ if(!_selected[id]) _selected[id]=new Set(); return _selected[id]; }
+
+function renderModule(id){
+  const m = MOD_BY_ID[id];
+  document.getElementById("pageTitle").textContent = m.name;
+  document.getElementById("pageCrumb").textContent = (m.tcrumb||"") + " · 数据存于本机";
+  if(m.type === "overview"){ renderOverview(); return; }
+  const data = getData(m.dataKey);
+  const c = document.getElementById("content");
+  const f = m.fields;
+
+  let head = "<th style='width:38px'><input type='checkbox' class='ck' id='selAll'></th>";
+  f.forEach(fi=>{ head += "<th>"+esc(fi.l)+"</th>"; });
+  head += "<th class='col-act'>操作</th>";
+
+  let rows = "";
+  if(data.length===0){
+    rows = "<tr><td colspan='"+(f.length+2)+"' class='center empty'>暂无数据。点击下方「新增」或「下载模板」批量导入（也可清空演示数据后重新录入）。</td></tr>";
+  }else{
+    const set = selSet(id);
+    data.forEach(r=>{
+      let tds = "<td><input type='checkbox' class='ck rowck' data-id='"+r.id+"' "+(set.has(r.id)?"checked":"")+"></td>";
+      f.forEach(fi=>{
+        let v = r[fi.k];
+        if(fi.t==="image"){
+          tds += "<td>"+(v?("<img class='cell-img' src='"+esc(v)+"' onclick='zoomImg(\""+esc(r.id)+"\",\""+id+"\")'>") : "<span class='muted'>—</span>")+"</td>";
+        }else if(fi.t==="multiselect"){
+          const arr = Array.isArray(v)? v : (v? String(v).split(",") : []);
+          tds += "<td>"+(arr.length? arr.map(x=>"<span class='tag "+(x==="出勤"?"tag-ok":(x==="旷工"||x==="迟到"?"tag-bad":"tag-warn"))+"'>"+esc(x)+"</span>").join(" ") : "—")+"</td>";
+        }else if(fi.t==="textarea"){
+          tds += "<td><div class='cell-note' title='"+esc(v)+"'>"+(v?esc(v):"—")+"</div></td>";
+        }else{
+          let cls = (fi.k==="gender"&&v==="男")?"tag tag-male":((fi.k==="gender"&&v==="女")?"tag tag-female":"");
+          tds += "<td>"+(v!==undefined&&v!==null&&v!==""? (cls?"<span class='"+cls+"'>"+esc(v)+"</span>":esc(v)) : "<span class='muted'>—</span>")+"</td>";
+        }
+      });
+      let acts = "<td class='col-act row-act'>";
+      if(can("edit")) acts += "<button onclick='editRec(\""+id+"\",\""+r.id+"\")'>编辑</button>";
+      if(can("del")) acts += "<button class='del' onclick='delRec(\""+id+"\",\""+r.id+"\")'>删除</button>";
+      acts += "</td>";
+      tds += acts;
+      rows += "<tr class='"+(set.has(r.id)?"sel":"")+"' data-id='"+r.id+"'>"+tds+"</tr>";
+    });
+  }
+
+  const canAdd=can("add"), canImp=can("imp"), canExp=can("exp"), canDel=can("del");
+  c.innerHTML =
+    "<div class='toolbar'>"+
+      (canAdd?"<button class='btn btn-gold btn-sm' onclick='openEditor(\""+id+"\")'>+ 新增</button>":"")+
+      (canImp?"<button class='btn btn-ghost btn-sm' onclick='downloadTpl(\""+id+"\")'>下载模板</button>":"")+
+      (canImp?"<button class='btn btn-ghost btn-sm' onclick='openImport(\""+id+"\")'>批量导入</button>":"")+
+      (canExp?"<button class='btn btn-ghost btn-sm' onclick='exportModule(\""+id+"\")'>导出本模块</button>":"")+
+      "<div class='search'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4-4'/></svg><input id='modSearch' placeholder='搜索…' oninput='filterModule(\""+id+"\")'></div>"+
+      "<span class='muted' style='font-size:13px'>共 "+data.length+" 条</span>"+
+    "</div>"+
+    "<div class='batch-bar' id='batchBar'><span>已选 <b id='selCount'>0</b> 项</span>"+
+      (canDel?"<button class='btn btn-danger btn-sm' onclick='delSelected(\""+id+"\")'>删除所选</button>":"")+
+      (canExp?"<button class='btn btn-ghost btn-sm' onclick='exportSelected(\""+id+"\")'>导出所选</button>":"")+
+      "<button class='btn btn-ghost btn-sm' onclick='clearSel(\""+id+"\")'>取消选择</button></div>"+
+    "<div class='table-wrap'><table class='grid'><thead><tr>"+head+"</tr></thead><tbody id='modBody'>"+rows+"</tbody></table></div>";
+
+  const sa = document.getElementById("selAll");
+  if(sa) sa.onchange = ()=>{ const set=selSet(id); if(sa.checked){ data.forEach(r=>set.add(r.id)); } else { set.clear(); } renderModule(id); };
+  c.querySelectorAll(".rowck").forEach(cb=>{ cb.onchange=()=>{ const set=selSet(id); if(cb.checked) set.add(cb.dataset.id); else set.delete(cb.dataset.id); updateBatch(id); }; });
+  updateBatch(id);
+}
+function updateBatch(id){
+  const bar=document.getElementById("batchBar"); if(!bar) return;
+  const n=selSet(id).size; document.getElementById("selCount").textContent=n;
+  bar.classList.toggle("show", n>0);
+}
+function clearSel(id){ selSet(id).clear(); renderModule(id); }
+function filterModule(id){
+  const q=(document.getElementById("modSearch").value||"").toLowerCase();
+  document.querySelectorAll("#modBody tr[data-id]").forEach(tr=>{
+    tr.style.display = tr.textContent.toLowerCase().indexOf(q)>=0 ? "" : "none";
+  });
+}
+
+/* ---------- 新增 / 编辑 ---------- */
+function openEditor(id, recId){
+  const m=MOD_BY_ID[id]; const data=getData(m.dataKey);
+  const rec = recId? data.find(r=>r.id===recId) : null;
+  const isEdit=!!rec;
+  let body="<div class='form-grid'>";
+  m.fields.forEach(fi=>{
+    let val = rec? rec[fi.k] : "";
+    body += "<div class='fld"+(fi.full?" full":"")+"'><label>"+esc(fi.l)+(fi.req?" *":"")+"</label>";
+    if(fi.t==="select"){
+      body += "<select data-k='"+fi.k+"'>"+(fi.o.map(o=>"<option "+(val===o?"selected":"")+">"+esc(o)+"</option>").join(""))+"</select>";
+    }else if(fi.t==="textarea"){
+      body += "<textarea data-k='"+fi.k+"' placeholder='"+esc(fi.l)+"'>"+esc(val)+"</textarea>";
+    }else if(fi.t==="multiselect"){
+      const arr = Array.isArray(val)?val:(val?String(val).split(","):[]);
+      body += "<div class='chk-group' id='ms_"+fi.k+"'>"+fi.o.map(o=>"<label class='chk-pill"+(arr.includes(o)?" on":"")+"'><input type='checkbox' value='"+esc(o)+"' "+(arr.includes(o)?"checked":"")+">"+esc(o)+"</label>").join("")+"</div>";
+    }else if(fi.t==="image"){
+      body += "<div class='img-drop' onclick=\"document.getElementById('imgFile').click()\">点击上传图片（自动压缩至800px）</div><input type='file' id='imgFile' accept='image/*' style='display:none' onchange='handleImg(this)'><div class='img-prev"+(val?" show":"")+"' id='imgPrev'><img id='imgPrevImg' src='"+(val?esc(val):"")+"'><span class='rm' onclick='removeImg()'>移除</span></div>";
+    }else{
+      const tp = fi.t==="number"?"number":(fi.t==="date"?"date":(fi.t==="tel"?"tel":"text"));
+      body += "<input data-k='"+fi.k+"' type='"+tp+"' value='"+esc(val)+"' placeholder='"+esc(fi.l)+"'>";
+    }
+    body += "</div>";
+  });
+  body += "</div>";
+  modal((isEdit?"编辑":"新增")+" · "+m.name, body,
+    "<button class='btn btn-ghost' onclick='closeModal()'>取消</button>"+
+    "<button class='btn btn-gold' onclick='saveRec(\""+id+"\",\""+(recId||"")+"\")'>"+(isEdit?"保存修改":"添加")+"</button>");
+  document.querySelectorAll("#modalBox .chk-pill input").forEach(cb=>{
+    cb.onchange=()=> cb.closest(".chk-pill").classList.toggle("on", cb.checked);
+  });
+  window._pendingImg = undefined;
+}
+function saveRec(id, recId){
+  const m=MOD_BY_ID[id]; const data=getData(m.dataKey);
+  const rec = {};
+  m.fields.forEach(fi=>{
+    if(fi.t==="multiselect"){
+      rec[fi.k] = [...document.querySelectorAll("#ms_"+fi.k+" input:checked")].map(c=>c.value);
+    }else if(fi.t==="image"){
+      rec[fi.k] = (window._pendingImg!==undefined)? window._pendingImg : (recId? ((data.find(r=>r.id===recId)||{})[fi.k]) : "");
+      window._pendingImg=undefined;
+    }else{
+      const el=document.querySelector("#modalBox [data-k='"+fi.k+"']");
+      rec[fi.k]= el? el.value.trim() : "";
+    }
+  });
+  const reqF = m.fields.find(fi=>fi.req);
+  if(reqF && !rec[reqF.k]){ showToast("请填写必填项（"+reqF.l+"）","err"); return; }
+  if(recId){ const i=data.findIndex(r=>r.id===recId); if(i>=0) data[i]=Object.assign({},data[i],rec); }
+  else { rec.id=uid(); rec.createdAt=todayStr(); data.push(rec); }
+  setData(m.dataKey, data);
+  closeModal(); renderModule(id); maybeBackupHint();
+  showToast(recId?"已保存修改":"已添加记录","ok");
+}
+function editRec(id,rid){ if(!can("edit")){showToast("无编辑权限","err");return;} openEditor(id,rid); }
+function delRec(id,rid){
+  if(!can("del")){showToast("无删除权限","err");return;}
+  if(!confirm("确定删除该记录？此操作不可撤销。")) return;
+  let data=getData(MOD_BY_ID[id].dataKey); data=data.filter(r=>r.id!==rid);
+  setData(MOD_BY_ID[id].dataKey,data); selSet(id).delete(rid); renderModule(id); showToast("已删除");
+}
+function delSelected(id){
+  if(!can("del")){showToast("无删除权限","err");return;}
+  const set=selSet(id); if(set.size===0) return;
+  if(!confirm("确定删除选中的 "+set.size+" 条记录？")) return;
+  let data=getData(MOD_BY_ID[id].dataKey); data=data.filter(r=>!set.has(r.id));
+  setData(MOD_BY_ID[id].dataKey,data); set.clear(); renderModule(id); showToast("已删除所选");
+}
+
+/* ---------- 图片（压缩至800px） ---------- */
+function handleImg(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height; const MAX=800;
+      if(w>MAX||h>MAX){ if(w>=h){h=h*MAX/w;w=MAX;} else {w=w*MAX/h;h=MAX;} }
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      try{ const durl=cv.toDataURL("image/jpeg",0.7); window._pendingImg=durl;
+        const prev=document.getElementById("imgPrev"); if(prev){ prev.classList.add("show"); document.getElementById("imgPrevImg").src=durl; }
+      }catch(e){ showToast("图片处理失败（可能过大）","err"); }
+    };
+    img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removeImg(){ window._pendingImg=""; const prev=document.getElementById("imgPrev"); if(prev) prev.classList.remove("show"); }
+function zoomImg(rid,id){
+  const data=getData(MOD_BY_ID[id].dataKey); const r=data.find(x=>x.id===rid); if(!r) return;
+  const fi=MOD_BY_ID[id].fields.find(x=>x.t==="image"); if(!fi||!r[fi.k]) return;
+  modal("图片查看", "<img src='"+esc(r[fi.k])+"' style='width:100%;border-radius:10px'>", "<button class='btn btn-ghost' onclick='closeModal()'>关闭</button>");
+}
+
+/* ---------- 导入 / 导出 / 模板 ---------- */
+function csvEscape(v){ v=v==null?"":String(v); if(/[",\n]/.test(v)) return '"'+v.replace(/"/g,'""')+'"'; return v; }
+function downloadFile(name, content, type){
+  const blob=new Blob([content],{type:type}); const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+}
+function downloadTpl(id){
+  const m=MOD_BY_ID[id];
+  const header = m.fields.filter(fi=>fi.t!=="image").map(fi=>fi.l).join(",");
+  const sample = m.fields.filter(fi=>fi.t!=="image").map(fi=>{
+    if(fi.k==="major" && id==="majors") return "数控技术应用";
+    if(fi.k==="major") return "数控技术应用";
+    if(fi.k==="name") return "示例";
+    if(fi.t==="select") return fi.o[0];
+    if(fi.k==="board") return "住宿";
+    return "";
+  }).join(",");
+  downloadFile(m.name+"_导入模板.csv", "﻿"+header+"\n"+sample, "text/csv;charset=utf-8");
+  showToast("模板已下载","ok");
+}
+function exportModule(id){
+  const m=MOD_BY_ID[id]; const data=getData(m.dataKey);
+  downloadFile(m.name+"_导出.json", JSON.stringify({module:m.name,exportedAt:todayStr(),data:data},null,2), "application/json");
+  showToast("已导出本模块","ok");
+}
+function exportSelected(id){
+  const m=MOD_BY_ID[id]; const set=selSet(id);
+  const data=getData(m.dataKey).filter(r=>set.has(r.id));
+  downloadFile(m.name+"_所选导出.json", JSON.stringify({module:m.name,data:data},null,2), "application/json");
+  showToast("已导出所选","ok");
+}
+function openImport(id){
+  const m=MOD_BY_ID[id];
+  const body =
+    "<p style='color:var(--muted);font-size:13.5px;margin-top:0'>支持 CSV（与模板列一致）或本工作台 JSON 备份。CSV 首行需为表头，图片字段留空。</p>"+
+    "<div class='img-drop' onclick=\"document.getElementById('impFile').click()\">点击选择 CSV / JSON 文件</div>"+
+    "<input type='file' id='impFile' accept='.csv,.json,text/csv,application/json' style='display:none' onchange='parseImport(\""+id+"\",this)'>"+
+    "<div id='impMsg' style='margin-top:12px;font-size:13px'></div>";
+  modal("批量导入 · "+m.name, body, "<button class='btn btn-ghost' onclick='closeModal()'>关闭</button>");
+}
+function parseImport(id, input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const txt=reader.result; const m=MOD_BY_ID[id]; let rows=[];
+      if(file.name.toLowerCase().endsWith(".json") || txt.trim().charAt(0)==="{"){
+        const j=JSON.parse(txt);
+        rows = Array.isArray(j)? j : (j.data? j.data : []);
+        rows = rows.map(r=>{ const o={}; m.fields.forEach(fi=>{ if(fi.k in r) o[fi.k]=r[fi.k]; }); o.id=uid(); return o; });
+      }else{
+        const lines=txt.replace(/^﻿/,"").split(/\r?\n/).filter(l=>l.trim()!=="");
+        const head=lines[0].split(",").map(s=>s.trim());
+        for(let i=1;i<lines.length;i++){
+          const cells=lines[i].split(",");
+          const o={}; m.fields.forEach((fi,idx)=>{ if(fi.t!=="image") o[fi.k]=(cells[idx]||"").trim(); });
+          o.id=uid(); rows.push(o);
+        }
+      }
+      if(rows.length===0){ document.getElementById("impMsg").innerHTML="<span style='color:var(--danger)'>未解析到有效数据</span>"; return; }
+      let data=getData(m.dataKey); data=data.concat(rows);
+      setData(m.dataKey, data);
+      document.getElementById("impMsg").innerHTML="<span style='color:var(--ok)'>成功导入 "+rows.length+" 条（总计 "+data.length+" 条）</span>";
+      setTimeout(()=>{ closeModal(); renderModule(id); maybeBackupHint(); }, 800);
+      showToast("导入成功 "+rows.length+" 条","ok");
+    }catch(e){ document.getElementById("impMsg").innerHTML="<span style='color:var(--danger)'>解析失败："+esc(e.message)+"</span>"; }
+  };
+  reader.readAsText(file);
+}
+
+/* =========================================================
+   部门概况（聚合计算 + 手写 SVG 图表）
+   ========================================================= */
+function computeOverview(){
+  const teachers=getData(DKEY.teachers), students=getData(DKEY.students),
+        classes=getData(DKEY.classes), majors=getData(DKEY.majors),
+        attendance=getData(DKEY.attendance), internships=getData(DKEY.internships),
+        violations=getData(DKEY.violations), dropouts=getData(DKEY.dropouts);
+  const teacherCount=teachers.length;
+  const headCount=teachers.filter(t=>t.isHead==="是").length;
+  const stuCount = students.length || classes.reduce((s,c)=>s+(Number(c.count)||0),0);
+  const male=students.filter(s=>s.gender==="男").length;
+  const female=students.filter(s=>s.gender==="女").length;
+  const board=students.filter(s=>s.board==="住宿").length;
+  const day=students.filter(s=>s.board==="走读").length;
+  const ratio = teacherCount>0 ? (stuCount/teacherCount).toFixed(1)+":1" : "—";
+  const majorDist={};
+  students.forEach(s=>{ if(s.major) majorDist[s.major]=(majorDist[s.major]||0)+1; });
+  if(Object.keys(majorDist).length===0){ majors.forEach(mj=>{ majorDist[mj.major]=(majorDist[mj.major]||0)+(Number(mj.stuCount)||0); }); }
+  const soon=[]; const now=new Date();
+  teachers.forEach(t=>{ if(t.birthday){ const d=new Date(t.birthday); if(!isNaN(d)){ let diff=daysBetween(now,new Date(now.getFullYear(),d.getMonth(),d.getDate())); if(diff<0) diff=daysBetween(now,new Date(now.getFullYear()+1,d.getMonth(),d.getDate())); if(diff<=30) soon.push({name:t.name,bd:t.birthday,diff:diff,head:t.isHead==="是"}); } } });
+  soon.sort((a,b)=>a.diff-b.diff);
+  const attStat={};
+  attendance.forEach(a=>{ const arr=Array.isArray(a.status)?a.status:(a.status?String(a.status).split(","):[]); arr.forEach(s=>attStat[s]=(attStat[s]||0)+1); });
+  return {teacherCount,headCount,stuCount,male,female,board,day,ratio,majorDist,soon,attStat,internships,violations,dropouts,classes,majors};
+}
+function donut(seg, size){
+  const total=seg.reduce((s,x)=>s+x.v,0)||1; const r=size/2-10, cx=size/2, cy=size/2;
+  let paths="";
+  if(total===0 || seg.every(x=>x.v===0)){
+    paths="<circle cx='"+cx+"' cy='"+cy+"' r='"+r+"' fill='none' stroke='#eef1f6' stroke-width='14'/>";
+  }else{
+    let acc=0;
+    seg.forEach(x=>{
+      if(x.v<=0) return;
+      const a1=acc/total*2*Math.PI, a2=(acc+x.v)/total*2*Math.PI;
+      const x1=cx+r*Math.cos(a1-Math.PI/2), y1=cy+r*Math.sin(a1-Math.PI/2);
+      const x2=cx+r*Math.cos(a2-Math.PI/2), y2=cy+r*Math.sin(a2-Math.PI/2);
+      const large=(a2-a1)>Math.PI?1:0;
+      paths+="<path d='M"+cx+" "+cy+" L"+x1.toFixed(1)+" "+y1.toFixed(1)+" A"+r+" "+r+" 0 "+large+" 1 "+x2.toFixed(1)+" "+y2.toFixed(1)+" Z' fill='"+x.color+"'/>";
+      acc+=x.v;
+    });
+  }
+  return "<svg width='"+size+"' height='"+size+"' viewBox='0 0 "+size+" "+size+"'>"+paths+
+    "<text x='"+cx+"' y='"+(cy-2)+"' text-anchor='middle' font-size='"+(size/7)+"' font-weight='700' fill='#1d2632'>"+(total>0?total:"0")+"</text>"+
+    "<text x='"+cx+"' y='"+(cy+size/9)+"' text-anchor='middle' font-size='"+(size/16)+"' fill='#76839a'>总计</text></svg>";
+}
+function stat(k,v,unit,sub){ return "<div class='stat'><div class='k'>"+esc(k)+"</div><div class='v'>"+esc(v)+(unit?"<small>"+esc(unit)+"</small>":"")+"</div><div class='sub'>"+esc(sub||"")+"</div></div>"; }
+function panel(title,sub,body){ return "<div class='panel'><h3>"+esc(title)+"</h3><div class='ph'>"+esc(sub)+"</div>"+body+"</div>"; }
+function renderOverview(){
+  const o=computeOverview(); const c=document.getElementById("content");
+  const bdList = o.soon.slice(0,4).map(s=>"<span class='titem'><span class='dot' style='background:var(--gold)'></span><span class='tt'><b>生日关怀</b> "+esc(s.name)+(s.head?"（班主任）":"")+" "+fmtDate(s.bd)+"</span><span class='meta'>"+s.diff+"天后</span></span>").join("") || "<div class='muted'>暂无即将到来的生日</div>";
+  const violList = o.violations.slice(0,3).map(v=>"<span class='titem over'><span class='dot' style='background:var(--danger)'></span><span class='tt'><b>"+esc(v.name)+"</b> "+esc(v.cls||"")+" 重大违纪待处理</span></span>").join("");
+  const attAb = Object.keys(o.attStat).filter(k=>["请假","迟到","旷工","出差"].includes(k)).reduce((s,k)=>s+o.attStat[k],0);
+  const alerts =
+    "<div class='alert-strip'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z'/></svg>"+
+    "<div class='at'>本周关注：近期 <b>"+o.soon.length+"</b> 位教师生日需关怀 · 本月 <b>"+o.violations.length+"</b> 起重大违纪待跟进 · 考勤异常 <b>"+attAb+"</b> 人次"+(o.dropouts.length?(" · 退学 <b>"+o.dropouts.length+"</b> 人"):"")+"</div></div>";
+  const stats =
+    "<div class='stat-grid'>"+
+      stat("在校学生", o.stuCount, "人", "住宿 "+o.board+" / 走读 "+o.day)+
+      stat("专任教师", o.teacherCount, "人", "班主任 "+o.headCount+" 位")+
+      stat("师生比", o.ratio, "", "按当前在校规模")+
+      stat("男生 / 女生", o.male+" / "+o.female, "人", "男女生结构")+
+      stat("住宿 / 走读", o.board+" / "+o.day, "人", "住校走读结构")+
+      stat("专业数", (Object.keys(o.majorDist).length||o.majors.length), "个", "三大装备制造专业")+
+    "</div>";
+  const genderDonut = donut([{v:o.male,color:"#2f6f8f"},{v:o.female,color:"#c0397a"}],150);
+  const boardDonut = donut([{v:o.board,color:"#b07d2b"},{v:o.day,color:"#7aa7c7"}],150);
+  const majorBars = Object.keys(o.majorDist).map(k=>{
+    const v=o.majorDist[k]; const max=Math.max(1,...Object.values(o.majorDist));
+    return "<div class='bar-row'><div class='bl' title='"+esc(k)+"'>"+esc(k)+"</div><div class='bar-track'><div class='bar-fill' style='width:"+(v/max*100)+"%'>"+v+"</div></div></div>";
+  }).join("") || "<div class='muted'>暂无专业分布数据</div>";
+  const charts =
+    "<div class='dash-2'>"+
+      panel("性别结构","在校学生男女生分布","<div class='chart-row'>"+genderDonut+"<div class='chart-legend'>"+
+        "<div class='lg'><i style='background:#2f6f8f'></i>男生 <b>"+o.male+"</b></div>"+
+        "<div class='lg'><i style='background:#c0397a'></i>女生 <b>"+o.female+"</b></div></div></div>")+
+      panel("住宿结构","住宿与走读学生分布","<div class='chart-row'>"+boardDonut+"<div class='chart-legend'>"+
+        "<div class='lg'><i style='background:#b07d2b'></i>住宿 <b>"+o.board+"</b></div>"+
+        "<div class='lg'><i style='background:#7aa7c7'></i>走读 <b>"+o.day+"</b></div></div></div>")+
+    "</div>"+
+    "<div class='dash-3'>"+
+      panel("各专业学生分布","按专业统计在校人数", majorBars)+
+      panel("近期教师生日关怀","30 天内生日，记得送上祝福", bdList)+
+      panel("本月教师考勤","当日状态汇总（最近录入）", Object.keys(o.attStat).length? Object.keys(o.attStat).map(k=>"<div class='lg'><i style='background:"+(k==="出勤"?"#2e7d57":(k==="旷工"||k==="迟到"?"#b5392b":"#c08a1e"))+"'></i>"+esc(k)+" <b>"+o.attStat[k]+"</b></div>").join("") : "<div class='muted'>暂无考勤记录</div>")+
+    "</div>";
+  const internRows = o.internships.slice(0,6).map(i=>"<tr><td>"+(i.outDate?fmtDate(i.outDate):"—")+"</td><td>"+esc(i.place||"—")+"</td><td>"+esc(i.leader||"—")+"</td></tr>").join("")||"<tr><td colspan=3 class='center muted'>暂无实习见习安排</td></tr>";
+  const classRows = o.classes.map(cl=>"<tr><td>"+esc(cl.cls||"—")+"</td><td>"+esc(cl.head||"—")+"</td><td>"+(cl.count||"—")+"</td><td>"+esc(cl.genderRatio||"—")+"</td><td>"+esc(cl.room||"—")+"</td></tr>").join("")||"<tr><td colspan=5 class='center muted'>暂无班级</td></tr>";
+  const dropRows = o.dropouts.slice(0,6).map(d=>"<tr><td>"+esc(d.name||"—")+"</td><td>"+esc(d.cls||"—")+"</td><td>"+esc(d.detail||"—")+"</td></tr>").join("")||"<tr><td colspan=3 class='center muted'>本月无退学记录</td></tr>";
+  const violRows = o.violations.slice(0,6).map(v=>"<tr><td>"+esc(v.name||"—")+"</td><td>"+esc(v.cls||"—")+"</td><td>"+esc(v.detail||"—")+"</td></tr>").join("")||"<tr><td colspan=3 class='center muted'>本月无重大违纪</td></tr>";
+  const tables =
+    "<div class='dash-3' style='grid-template-columns:repeat(auto-fit,minmax(320px,1fr))'>"+
+      panel("实习见习班级情况","外出时间与带队教师","<table class='mini-table'><thead><tr><th>外出时间</th><th>地点</th><th>带队教师</th></tr></thead><tbody>"+internRows+"</tbody></table>")+
+      panel("班级一览表","班主任与教室分布","<table class='mini-table'><thead><tr><th>班级</th><th>班主任</th><th>人数</th><th>男女生比</th><th>教室</th></tr></thead><tbody>"+classRows+"</tbody></table>")+
+    "</div>"+
+    "<div class='dash-3' style='grid-template-columns:repeat(auto-fit,minmax(320px,1fr))'>"+
+      panel("本月退学学生明细","需跟进与备案","<table class='mini-table'><thead><tr><th>姓名</th><th>班级</th><th>退学情况</th></tr></thead><tbody>"+dropRows+"</tbody></table>")+
+      panel("本月重大违纪学生明细","需处理与存档","<table class='mini-table'><thead><tr><th>姓名</th><th>班级</th><th>违纪情况</th></tr></thead><tbody>"+violRows+"</tbody></table>")+
+    "</div>";
+  c.innerHTML =
+    "<div class='hero'><svg class='bg' viewBox='0 0 200 200' fill='none'><g stroke='#caa15a' stroke-width='2'><circle cx='100' cy='100' r='70'/><circle cx='100' cy='100' r='48'/><path d='M100 30v20M100 150v20M30 100h20M150 100h20'/><circle cx='100' cy='100' r='14'/></g></svg>"+
+      "<div class='eyebrow'>DEPARTMENT WORKSPACE</div><h2>现代装备制造部</h2>"+
+      "<p>数控技术应用 · 无人机操控与维护 · 工业机器人技术应用 —— 部门运行一览，数据实时聚合自各业务模块。</p>"+
+      "<div class='seal'>装备制造<br>部</div></div>"+
+    alerts + stats + charts + tables;
+}
+
+/* =========================================================
+   导航 / 外壳
+   ========================================================= */
+let _current="overview";
+function buildNav(){
+  const nav=document.getElementById("nav"), tab=document.getElementById("bottomTab");
+  nav.innerHTML=""; tab.innerHTML="";
+  MODULES.forEach((m,idx)=>{
+    nav.insertAdjacentHTML("beforeend","<button class='nav-item"+(m.id===_current?" active":"")+"' onclick='goto(\""+m.id+"\")'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>"+m.icon+"</svg>"+esc(m.name)+"</button>");
+    if(idx<5){
+      tab.insertAdjacentHTML("beforeend","<button class='bt-item"+(m.id===_current?" active":"")+"' onclick='goto(\""+m.id+"\")'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>"+m.icon+"</svg>"+esc(m.name)+"</button>");
+    }
+  });
+  tab.insertAdjacentHTML("beforeend","<button class='bt-item' onclick='openMore()'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='5' cy='12' r='1.6'/><circle cx='12' cy='12' r='1.6'/><circle cx='19' cy='12' r='1.6'/></svg>更多</button>");
+}
+function openMore(){
+  const items = MODULES.slice(5).map(m=>"<button class='btn btn-ghost btn-sm' style='width:100%;margin-bottom:8px;justify-content:flex-start' onclick='goto(\""+m.id+"\");closeModal()'><svg width=16 height=16 viewBox='0 0 24 24' fill=none stroke=currentColor stroke-width=2 style='margin-right:8px'>"+m.icon+"</svg>"+esc(m.name)+"</button>").join("");
+  modal("全部模块", items||"<div class='muted'>无更多模块</div>", "<button class='btn btn-ghost' onclick='closeModal()'>关闭</button>");
+}
+function goto(id){ _current=id; buildNav(); renderModule(id); window.scrollTo(0,0); }
+
+/* =========================================================
+   用户与权限 / 备份
+   ========================================================= */
+function openUsers(){
+  if(currentUser.role!=="admin"){ showToast("仅超级管理员可管理用户","err"); return; }
+  const users=getUsers();
+  let body="<p class='muted' style='font-size:13px;margin-top:0'>你是超级管理员，拥有最高权限。可新增成员、修改其权限；成员使用各自账号密码登录本机工作台。</p><div id='userList'>";
+  users.forEach(u=>{
+    body+="<div class='user-row'><div class='av'>"+esc((u.name||"部").slice(0,1))+"</div><div class='info'><b>"+esc(u.name)+"</b> <span>"+(u.role==="admin"?"超级管理员":"普通成员")+"</span></div>"+
+      (u.role!=="admin"?("<button class='btn btn-ghost btn-sm' onclick='editUser(\""+u.id+"\")'>权限</button><button class='btn btn-danger btn-sm' onclick='delUser(\""+u.id+"\")'>删除</button>"):"<span class='tag tag-ok'>最高权限</span>")+
+      "</div>";
+  });
+  body+="</div><button class='btn btn-gold btn-sm' style='margin-top:6px' onclick='addUser()'>+ 新增成员</button>";
+  modal("用户与权限", body, "<button class='btn btn-ghost' onclick='closeModal()'>关闭</button>");
+}
+function addUser(){
+  const body="<div class='form-grid'><div class='fld'><label>用户名 *</label><input id='nu_name' placeholder='如：张老师'></div>"+
+    "<div class='fld'><label>登录密码 *</label><input id='nu_pwd' type='password' placeholder='设置密码'></div></div>"+
+    "<div class='fld full' style='margin-top:12px'><label>权限分配</label><div class='perm-grid' id='nu_perm'>"+
+    PERMS.map(p=>"<label class='chk-pill on'><input type='checkbox' value='"+p.k+"' checked>"+p.label+"</label>").join("")+"</div></div>";
+  modal("新增成员", body, "<button class='btn btn-ghost' onclick='closeModal()'>取消</button><button class='btn btn-gold' onclick='saveUser()'>创建</button>");
+}
+function saveUser(){
+  const name=document.getElementById("nu_name").value.trim();
+  const pwd=document.getElementById("nu_pwd").value;
+  if(!name||!pwd){ showToast("请填写用户名与密码","err"); return; }
+  const perms={}; PERMS.forEach(p=>perms[p.k]=false);
+  document.querySelectorAll("#nu_perm input:checked").forEach(c=>perms[c.value]=true);
+  const users=getUsers();
+  if(users.some(u=>u.name===name)){ showToast("用户名已存在","err"); return; }
+  users.push({id:uid(), name:name, role:"member", password:hash(pwd), perms:perms});
+  setUsers(users); closeModal(); openUsers(); showToast("成员已创建","ok");
+}
+function editUser(uid2){
+  const u=getUsers().find(x=>x.id===uid2); if(!u) return;
+  const body="<div class='fld full'><label>成员：<b>"+esc(u.name)+"</b></label><div class='perm-grid' id='eu_perm'>"+
+    PERMS.map(p=>"<label class='chk-pill"+(u.perms[p.k]?" on":"")+"'><input type='checkbox' value='"+p.k+"' "+(u.perms[p.k]?"checked":"")+">"+p.label+"</label>").join("")+"</div></div>"+
+    "<div class='fld full' style='margin-top:14px'><label>重置密码</label><input id='eu_pwd' type='password' placeholder='留空则不修改'></div>";
+  modal("编辑权限 · "+u.name, body, "<button class='btn btn-ghost' onclick='closeModal()'>取消</button><button class='btn btn-gold' onclick='saveEditUser(\""+uid2+"\")'>保存</button>");
+}
+function saveEditUser(uid2){
+  const users=getUsers(); const u=users.find(x=>x.id===uid2); if(!u) return;
+  PERMS.forEach(p=> u.perms[p.k]=false);
+  document.querySelectorAll("#eu_perm input:checked").forEach(c=>u.perms[c.value]=true);
+  const np=document.getElementById("eu_pwd").value;
+  if(np) u.password=hash(np);
+  setUsers(users); closeModal(); openUsers(); showToast("权限已更新","ok");
+}
+function delUser(uid2){
+  if(!confirm("删除该成员？其本地数据不受影响。")) return;
+  setUsers(getUsers().filter(u=>u.id!==uid2)); openUsers(); showToast("已删除成员");
+}
+function openBackup(){
+  const body="<p class='muted' style='font-size:13px;margin-top:0'>数据保存在本机浏览器（localStorage）。建议定期导出备份，换设备或清缓存前务必备份。</p>"+
+    "<div style='display:flex;gap:10px;flex-wrap:wrap;margin:14px 0'>"+
+    "<button class='btn btn-gold btn-sm' onclick='exportAll()'>导出全部 JSON 备份</button>"+
+    "<button class='btn btn-ghost btn-sm' onclick=\"document.getElementById('impAll').click()\">导入恢复（不限条数）</button>"+
+    "<input type='file' id='impAll' accept='.json,application/json' style='display:none' onchange='importAll(this)'>"+
+    "<button class='btn btn-ghost btn-sm' onclick='clearDemo()'>清空演示数据</button>"+
+    "</div><div id='bkMsg' style='font-size:13px'></div>"+
+    "<p class='muted' style='font-size:12.5px;margin-top:10px'>⚠ 清空演示数据仅移除预置示例，不影响你录入的真实数据。</p>"+
+    "<p style='font-size:12.5px;margin-top:12px;padding:12px 14px;background:#f6f8fb;border:1px solid var(--line);border-radius:10px;line-height:1.7'><b>多设备协作说明：</b>当前为「本机存储」模式，数据保存在各自浏览器中，<b>暂不自动跨设备实时同步</b>。多名成员用不同手机时，可用「导出全部 JSON 备份」互相发送、再用「导入恢复（不限条数）」合并数据。若需要真正的跨设备实时共享同一份数据 + 统一权限，请启用云端能力（云数据库 / 云登录 / 云存储），届时我会把数据层切换为云端，界面与在线链接保持不变。</p>";
+  modal("数据备份 / 恢复", body, "<button class='btn btn-ghost' onclick='closeModal()'>关闭</button>");
+}
+function exportAll(){
+  const dump={ app:"装备制造部工作台", version:1, exportedAt:todayStr(), data:{} };
+  for(const k in DKEY){ dump.data[k]=getData(DKEY[k]); }
+  dump.users=getUsers(); dump.settings=getSettings();
+  downloadFile("装备制造部工作台_全量备份.json", JSON.stringify(dump,null,2), "application/json");
+  showToast("已导出全量备份","ok");
+}
+function importAll(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const j=JSON.parse(reader.result);
+      if(!j.data) throw new Error("文件格式不正确");
+      for(const k in DKEY){ if(j.data[k]) setData(DKEY[k], j.data[k]); }
+      if(j.users) setUsers(j.users);
+      if(j.settings) setSettings(j.settings);
+      document.getElementById("bkMsg").innerHTML="<span style='color:var(--ok)'>恢复成功，正在刷新…</span>";
+      setTimeout(()=>{ closeModal(); goto(_current); showToast("数据已恢复","ok"); }, 700);
+    }catch(e){ document.getElementById("bkMsg").innerHTML="<span style='color:var(--danger)'>恢复失败："+esc(e.message)+"</span>"; }
+  };
+  reader.readAsText(file);
+}
+function clearDemo(){
+  if(!confirm("仅清空预置的演示数据？此操作不可撤销。")) return;
+  for(const k in DKEY){ const arr=getData(DKEY[k]); setData(DKEY[k], arr.filter(r=>!r._demo)); }
+  showToast("演示数据已清空","ok"); goto(_current);
+}
+function openRecover(){
+  const keys=Object.keys(_corrupt);
+  const body="<p style='color:var(--danger);font-size:14px'>检测到本地数据可能已损坏（键："+keys.join(", ")+"）。</p>"+
+    "<p class='muted' style='font-size:13px'>你可以从之前的 JSON 备份恢复，或清空损坏数据以重新开始。未损坏的模块仍可正常使用。</p>"+
+    "<div style='display:flex;gap:10px;margin-top:12px'><button class='btn btn-gold btn-sm' onclick=\"document.getElementById('recFile').click()\">从备份恢复</button><input type='file' id='recFile' accept='.json' style='display:none' onchange='importAll(this)'><button class='btn btn-ghost btn-sm' onclick='wipeCorrupt()'>清空损坏数据</button></div>";
+  modal("数据恢复", body, "<button class='btn btn-ghost' onclick='closeModal()'>稍后处理</button>");
+}
+function wipeCorrupt(){
+  for(const k in _corrupt){ localStorage.removeItem(raw(k)); }
+  _corrupt={}; closeModal(); showToast("已清空损坏数据"); goto(_current);
+}
+
+/* =========================================================
+   弹窗基础
+   ========================================================= */
+function modal(title, body, foot){
+  document.getElementById("modalBox").innerHTML=
+    "<div class='modal-head'><h3>"+esc(title)+"</h3><button class='close-x' onclick='closeModal()'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M18 6L6 18M6 6l12 12'/></svg></button></div>"+
+    "<div class='modal-body'>"+body+"</div>"+
+    (foot?"<div class='modal-foot'>"+foot+"</div>":"");
+  document.getElementById("modalMask").classList.add("show");
+}
+function closeModal(){ document.getElementById("modalMask").classList.remove("show"); }
+
+/* =========================================================
+   认证流程
+   ========================================================= */
+function showAuth(setup){
+  const mask=document.getElementById("authMask");
+  mask.classList.remove("hidden");
+  document.getElementById("app").classList.add("hidden");
+  const sub=document.getElementById("authSub"), nameField=document.getElementById("nameField");
+  const hint=document.getElementById("authHint"), btn=document.getElementById("authBtn");
+  document.getElementById("authErr").textContent="";
+  if(setup){
+    sub.textContent="首次使用 · 创建部长（超级管理员）账号";
+    nameField.style.display="block";
+    document.getElementById("authName").value="部长";
+    hint.innerHTML="创建后请牢记密码；之后可在「用户与权限」中添加其他成员并分配权限。";
+    btn.textContent="创建并进入";
+    btn.onclick=doSetup;
+  }else{
+    const users=getUsers();
+    sub.textContent="部门集成工作台 · 请登录";
+    if(users.length>1){ nameField.style.display="block"; hint.innerHTML="可用账号："+users.map(u=>esc(u.name)).join("、"); }
+    else{ nameField.style.display="none"; }
+    btn.textContent="登 录";
+    btn.onclick=doLogin;
+  }
+}
+function doSetup(){
+  const name=(document.getElementById("authName").value||"部长").trim();
+  const pwd=document.getElementById("authPwd").value;
+  if(!pwd){ document.getElementById("authErr").textContent="请设置登录密码"; return; }
+  const users=[{id:uid(), name:name, role:"admin", password:hash(pwd), perms:ADMIN_ALL}];
+  setUsers(users);
+  const s=getSettings(); s.setupDone=true; setSettings(s);
+  currentUser=users[0];
+  enterApp();
+}
+function doLogin(){
+  const users=getUsers();
+  const nameField=document.getElementById("nameField");
+  const name = nameField.style.display==="none" ? (users[0]&&users[0].name) : (document.getElementById("authName").value||"").trim();
+  const pwd=document.getElementById("authPwd").value;
+  const u=users.find(x=>x.name===name && x.password===hash(pwd));
+  if(!u){ document.getElementById("authErr").textContent="账号或密码错误"; return; }
+  currentUser=u; enterApp();
+}
+function enterApp(){
+  document.getElementById("authMask").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("sideAv").textContent=(currentUser.name||"部").slice(0,1);
+  document.getElementById("sideNm").textContent=currentUser.name;
+  document.getElementById("sideRl").textContent=currentUser.role==="admin"?"超级管理员":"普通成员";
+  seedDemoIfEmpty();
+  buildNav(); renderModule(_current);
+}
+function logout(){ currentUser=null; document.getElementById("authPwd").value=""; showAuth(false); }
+
+/* =========================================================
+   演示数据（可清空）
+   ========================================================= */
+function seedDemoIfEmpty(){
+  let any=false; for(const k in DKEY){ if(getData(DKEY[k]).length>0) any=true; }
+  if(any) return;
+  const demo={};
+  demo[DKEY.majors]=[
+    {id:uid(),major:"数控技术应用",classCount:4,stuCount:160,teacherCount:9,_demo:true},
+    {id:uid(),major:"无人机操控与维护",classCount:3,stuCount:118,teacherCount:7,_demo:true},
+    {id:uid(),major:"工业机器人技术应用",classCount:3,stuCount:126,teacherCount:8,_demo:true}
+  ];
+  demo[DKEY.teachers]=[
+    {id:uid(),name:"王建国",gender:"男",role:"专业部长",title:"高级讲师",major:"数控技术应用",isHead:"是",birthday:"1982-10-22",phone:"13800000001",note:"数控专业带头人",_demo:true},
+    {id:uid(),name:"李梅",gender:"女",role:"教师",title:"讲师",major:"无人机操控与维护",isHead:"否",birthday:"1990-11-05",phone:"13800000002",note:"",_demo:true},
+    {id:uid(),name:"张涛",gender:"男",role:"教师",title:"助理讲师",major:"工业机器人技术应用",isHead:"是",birthday:"1995-10-28",phone:"13800000003",note:"",_demo:true}
+  ];
+  demo[DKEY.classes]=[
+    {id:uid(),cls:"数控2301",head:"王建国",headPhone:"13800000001",count:40,genderRatio:"24:16",boardRatio:"30:10",room:"实训楼301",_demo:true},
+    {id:uid(),cls:"无人机2301",head:"李梅",headPhone:"13800000002",count:39,genderRatio:"22:17",boardRatio:"28:11",room:"实训楼205",_demo:true},
+    {id:uid(),cls:"机器人2301",head:"张涛",headPhone:"13800000003",count:42,genderRatio:"25:17",boardRatio:"33:9",room:"实训楼402",_demo:true}
+  ];
+  demo[DKEY.students]=[
+    {id:uid(),name:"陈浩",gender:"男",cls:"数控2301",major:"数控技术应用",board:"住宿",addr:"本市东区",parentPhone:"13900000011",special:"否",defect:"",_demo:true},
+    {id:uid(),name:"刘芳",gender:"女",cls:"无人机2301",major:"无人机操控与维护",board:"走读",addr:"本市西区",parentPhone:"13900000012",special:"否",defect:"",_demo:true},
+    {id:uid(),name:"赵强",gender:"男",cls:"机器人2301",major:"工业机器人技术应用",board:"住宿",addr:"本市南区",parentPhone:"13900000013",special:"是",defect:"轻度哮喘，已备药",_demo:true}
+  ];
+  demo[DKEY.attendance]=[
+    {id:uid(),teacher:"王建国",role:"专业部长",status:["出勤"],note:"",_demo:true},
+    {id:uid(),teacher:"李梅",role:"教师",status:["请假"],note:"病假",_demo:true}
+  ];
+  demo[DKEY.internships]=[
+    {id:uid(),outDate:todayStr(),place:"某智能制造企业",leader:"王建国",note:"本学期岗位实习",_demo:true}
+  ];
+  demo[DKEY.violations]=[];
+  demo[DKEY.dropouts]=[];
+  demo[DKEY.cadres]=[
+    {id:uid(),name:"孙明",cls:"数控2301",position:"学生会主席",phone:"13700000021",note:"",_demo:true}
+  ];
+  for(const k in demo){ setData(k, demo[k]); }
+}
+
+/* =========================================================
+   初始化（单向：load → init → render）
+   ========================================================= */
+function init(){
+  document.getElementById("modalMask").addEventListener("click", e=>{ if(e.target.id==="modalMask") closeModal(); });
+  document.getElementById("openUsers").onclick=openUsers;
+  document.getElementById("openBackup").onclick=openBackup;
+  document.getElementById("logoutBtn").onclick=logout;
+  document.getElementById("mobileMenuBtn").onclick=openMore;
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+  const users=getUsers(); const s=getSettings();
+  if(users.length===0 || !s.setupDone){ showAuth(true); }
+  else { showAuth(false); }
+}
+window.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
